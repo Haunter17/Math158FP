@@ -1,12 +1,13 @@
 ## task 1
 library(readr)
-f2016wireless <- read_delim("~/Documents/life&work/Super Senior/math158/proj/wireless/2016FallSemWireless.csv", 
+maindir <- 
+f2016wireless <- read_delim("./data/wireless/2016FallSemWireless.csv", 
                                    "\t", escape_double = FALSE, trim_ws = TRUE)
 ## task 2
 f2016wireless[f2016wireless == '-']  <- NA
 
 ## task 3
-ezDir <- "~/Documents/life&work/Super Senior/math158/proj/ezproxy/"
+ezDir <- "./data/ezproxy/"
 csvList <- list.files(ezDir, pattern="*.csv")
 for (i in 1 : length(csvList)) {
   dataname <- strsplit(csvList[i], "_|\\.")[[1]][[1]]

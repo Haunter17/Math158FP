@@ -1,4 +1,8 @@
+*.zip
+*.twbx
+Honnold Wifi Data Dictionary
 *.csv
+*.tsv
 *.txt
 *.list
 *.jpg
