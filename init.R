@@ -1,6 +1,5 @@
 ## task 1
 library(readr)
-maindir <- 
 f2016wireless <- read_delim("./data/wireless/2016FallSemWireless.csv", 
                                    "\t", escape_double = FALSE, trim_ws = TRUE)
 ## task 2
