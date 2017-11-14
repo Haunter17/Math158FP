@@ -35,3 +35,9 @@ ccl2016 <- separate(ccl2016, datetime, into=c("start", "end"), sep=19) # 19 is c
 library(anytime)
 start_datetime <- anytime(ccl2016$start)
 end_datetime <- anytime(ccl2016$end)
+
+# Join the data
+ezdata <- merge(ccl2016, spu2016, by = "session", all.x = TRUE)
+
+ezdata$start_ts <- as.numeric(as.POSIXct(anytime(ezdata$start), tz = "ETC/GMT-7"))
+ezdata$end_ts <- as.numeric(as.POSIXct(anytime(ezdata$end), tz = "ETC/GMT-7"))
