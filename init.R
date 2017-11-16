@@ -41,3 +41,21 @@ ezdata <- merge(ccl2016, spu2016, by = "session", all.x = TRUE)
 
 ezdata$start_ts <- as.numeric(as.POSIXct(anytime(ezdata$start), tz = "ETC/GMT-7"))
 ezdata$end_ts <- as.numeric(as.POSIXct(anytime(ezdata$end), tz = "ETC/GMT-7"))
+
+#select variables
+ezdata2<-ezdata %>% select(campus,domain,subdomain,path,query,start,end,start_ts,end_ts)
+
+#deleting rows with NA
+ezdata2<-ezdata2 %>% filter(!is.na(end_ts))
+
+#Calculating duration
+ezdata2<-ezdata2 %>% mutate(duration=end_ts-start_ts)
+
+#One-way ANOVA on duration and campus
+myap<-aov(duration~campus,data=ezdata2)
+summary(myap)
+lmod<-lm(duration~campus,ezdata2)
+summary(lmod)
+
+
+
