@@ -103,4 +103,18 @@ for (campus in c("hmc", "pom", "scr", "pit", "cmc", "cgu")) {
 }
                    
                    
-                   
+## partition start hr into bins
+getHr <- function(datetime) {
+  hms <- strsplit(trimws(datetime), ' ')[[1]][2]
+  as.numeric(strsplit(hms, ':')[[1]][1])
+}
+
+ezdata2 <- ezdata2 %>% mutate(start_hr=sapply(ezdata2$start, getHr),
+                              end_hr=sapply(ezdata2$end, getHr))
+
+library(ggplot2)
+# plots for all school
+ggplot(ezdata2, aes(x=start_hr, fill=campus)) + geom_bar() + labs(title="Distribution of Start Time (All)") + xlab("start hour")
+ggplot(ezdata2, aes(x=end_hr, fill=campus)) + geom_bar() + labs(title="Distribution of End Time (All)") + xlab("end hour")
+# by individual schools
+ggplot(ezdata2 %>% filter(campus=="hmc"), aes(x=start_hr)) + geom_histogram(breaks=c(seq(0, 24, 3)), color="white", fill="blue") + ggtitle("Distribution of Start Time (HMC)") + xlab("start hour")
