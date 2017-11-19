@@ -80,7 +80,7 @@ kgi<-ezdata2%>%filter(campus=="kgi")
 kgi %>% ggplot(aes(x=1:dim(kgi)[1],y=duration))+geom_hline(aes(yintercept=mean(kgi$duration)))+geom_point(size=0.5)+labs(x="index", title="Wireless Duration Plot of Keck Graduate Institute")
 
 #Duration Histogram                   
-ezdata2 %>% ggplot(aes(x=duration))+geom_histogram(binwidth=30)+coord_cartesian(xlim=c(0,600))                   
+ezdata2 %>% ggplot(aes(x=duration))+geom_histogram(binwidth=30,color="pink")+coord_cartesian(xlim=c(0,600))                   
                    
 # Change campus
 
