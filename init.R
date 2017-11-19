@@ -49,7 +49,7 @@ ezdata2<-ezdata %>% select(campus,domain,subdomain,path,query,start,end,start_ts
 ezdata2<-ezdata2 %>% filter(!is.na(end_ts))
 
 #Calculating duration
-ezdata2<-ezdata2 %>% mutate(duration=end_ts-start_ts)
+ezdata2<-ezdata2 %>% mutate(duration=(end_ts-start_ts)/60)
 
 #One-way ANOVA on duration and campus
 myap<-aov(duration~campus,data=ezdata2)
@@ -57,5 +57,28 @@ summary(myap)
 lmod<-lm(duration~campus,ezdata2)
 summary(lmod)
 
+#Duration plots by Campus
+pomona<-ezdata2 %>% filter(campus=="pomona" | campus=="pom")
+pomona %>% ggplot(aes(x=1:dim(pomona)[1],y=duration))+geom_hline(aes(yintercept=mean(pomona$duration)),color="blue")+geom_point(size=0.5)+labs(x="index", title="Wireless Duration Plot of Pomona College")
 
+hmc<-ezdata2%>%filter(campus=="hmc")
+hmc %>% ggplot(aes(x=1:dim(hmc)[1],y=duration))+geom_hline(aes(yintercept=mean(hmc$duration)),color="brown")+geom_point(size=0.5)+labs(x="index", title="Wireless Duration Plot of Harvey Mudd College")
 
+pitzer<-ezdata2%>%filter(campus=="pitzer"|campus=="pit")
+pitzer %>% ggplot(aes(x=1:dim(pitzer)[1],y=duration))+geom_hline(aes(yintercept=mean(pitzer$duration)),color="orange")+geom_point(size=0.5)+labs(x="index", title="Wireless Duration Plot of Pitzer College")
+
+scripps<-ezdata2%>%filter(campus=="scrippscollege"|campus=="scr")
+scripps %>% ggplot(aes(x=1:dim(scripps)[1],y=duration))+geom_hline(aes(yintercept=mean(scripps$duration)),color="green")+geom_point(size=0.5)+labs(x="index", title="Wireless Duration Plot of Scripps College")
+
+cmc<-ezdata2%>%filter(campus=="cmc")
+cmc %>% ggplot(aes(x=1:dim(cmc)[1],y=duration))+geom_hline(aes(yintercept=mean(cmc$duration)),color="red")+geom_point(size=0.5)+labs(x="index", title="Wireless Duration Plot of Claremont McKenna College")
+
+cgu<-ezdata2%>%filter(campus=="cgu")
+cgu %>% ggplot(aes(x=1:dim(cgu)[1],y=duration))+geom_hline(aes(yintercept=mean(cgu$duration)),color="purple")+geom_point(size=0.5)+labs(x="index", title="Wireless Duration Plot of Claremont Graduate University")
+
+kgi<-ezdata2%>%filter(campus=="kgi")
+kgi %>% ggplot(aes(x=1:dim(kgi)[1],y=duration))+geom_hline(aes(yintercept=mean(kgi$duration)))+geom_point(size=0.5)+labs(x="index", title="Wireless Duration Plot of Keck Graduate Institute")
+
+                   
+                   
+                   

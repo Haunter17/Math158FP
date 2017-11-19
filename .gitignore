@@ -9,3 +9,4 @@ Honnold Wifi Data Dictionary
 *.png
 *.pdf
 .DS_Store
+.Rproj.user
