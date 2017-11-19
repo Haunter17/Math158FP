@@ -82,3 +82,43 @@ kgi %>% ggplot(aes(x=1:dim(kgi)[1],y=duration))+geom_hline(aes(yintercept=mean(k
                    
                    
                    
+# Change campus
+
+ezdata2$campus[ezdata2$campus == "scrippscollege"] <- "scr"
+ezdata2$campus[ezdata2$campus == "pomona"] <- "pom"
+ezdata2$campus[ezdata2$campus == "pitzer"] <- "pit"
+ezdata2$campus[ezdata2$campus == "kecksci"] <- "kec"
+
+# School vs. Domain
+
+par(mfrow=c(3, 2))
+FREQ_LIMIT <- 500
+for (campus in c("hmc", "pom", "scr", "pit", "cmc", "cgu")) {
+  campus_data <- ezdata2[ezdata2$campus == campus,]
+  domain_count <- as.data.frame(table(unlist(campus_data$domain)))
+  
+  small_domain_count <- data.frame(Var1="other",Freq=sum(domain_count[domain_count$Freq < FREQ_LIMIT,]$Freq))
+  domain_data <- domain_count[domain_count$Freq >= FREQ_LIMIT,]
+  levels(domain_data$Var1) <- c(levels(domain_data$Var1), "other")
+  domain_data <- rbind(domain_data, small_domain_count)
+  
+  pie(domain_data$Freq, sapply(domain_data$Var1, as.character), main=paste(campus, "vs. Domain", sep=" "))
+}
+                   
+                   
+## partition start hr into bins
+getHr <- function(datetime) {
+  hms <- strsplit(trimws(datetime), ' ')[[1]][2]
+  as.numeric(strsplit(hms, ':')[[1]][1])
+}
+
+ezdata2 <- ezdata2 %>% mutate(start_hr=sapply(ezdata2$start, getHr),
+                              end_hr=sapply(ezdata2$end, getHr))
+
+library(ggplot2)
+# plots for all school
+ggplot(ezdata2, aes(x=start_hr, fill=campus)) + geom_bar() + labs(title="Distribution of Start Time (All)") + xlab("start hour")
+ggplot(ezdata2, aes(x=end_hr, fill=campus)) + geom_bar() + labs(title="Distribution of End Time (All)") + xlab("end hour")
+# by individual schools
+ggplot(ezdata2 %>% filter(campus=="hmc"), aes(x=start_hr)) + geom_histogram(breaks=c(seq(0, 24, 3)), color="white", fill="blue") + ggtitle("Distribution of Start Time (HMC)") + xlab("start hour")
+
