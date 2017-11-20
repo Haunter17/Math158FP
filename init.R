@@ -1,5 +1,9 @@
 ## task 1
 library(readr)
+require(dplyr)
+library(ggplot2)
+library(gridExtra)
+
 f2016wireless <- read_delim("./data/wireless/2016FallSemWireless.csv", 
                                    "\t", escape_double = FALSE, trim_ws = TRUE)
 ## task 2
@@ -51,23 +55,66 @@ ezdata2<-ezdata2 %>% filter(!is.na(end_ts))
 #Calculating duration
 ezdata2<-ezdata2 %>% mutate(duration=(end_ts-start_ts)/60)
 
+# Merge campus
+ezdata2$campus[ezdata2$campus == "scrippscollege"] <- "scr"
+ezdata2$campus[ezdata2$campus == "pomona"] <- "pom"
+ezdata2$campus[ezdata2$campus == "pitzer"] <- "pit"
+ezdata2$campus[(ezdata2$campus == "kecksci") | (ezdata2$campus == "kec") ] <- "kgi"
+ezdata2$campus <- factor(ezdata2$campus)
+
+## partition start hr into bins
+getHr <- function(datetime) {
+  hms <- strsplit(trimws(datetime), ' ')[[1]][2]
+  as.numeric(strsplit(hms, ':')[[1]][1])
+}
+
+ezdata2 <- ezdata2 %>% mutate(start_hr=sapply(ezdata2$start, getHr),
+                              end_hr=sapply(ezdata2$end, getHr))
+
+### distribution of start & end time
+pdf("start_distb_tot.pdf", width=8, height=6)
+ggplot(ezdata2, aes(x=start_hr, fill=campus)) + geom_bar() + labs(title="Distribution of Start Time (All)") + xlab("start hour")
+dev.off()
+# by individual schools
+pdf("start_distb_indv.pdf", width=12, height=8)
+par(mfrow=c(4, 2))
+for (camp in levels(ezdata2$campus)) {
+  cur_data <- ezdata2 %>% filter(campus==camp)
+  title <- paste("Distribution of Start Time of",  toupper(camp))
+  hist(cur_data$start_hr, main=title, xlab="start hour", breaks=9, border="white", col="pink")
+}
+dev.off()
+
+pdf("end_distb_tot.pdf", width=8, height=6)
+ggplot(ezdata2, aes(x=end_hr, fill=campus)) + geom_bar() + labs(title="Distribution of End Time (All)") + xlab("end hour")
+dev.off()
+
+pdf("end_distb_indv.pdf", width=12, height=8)
+par(mfrow=c(4, 2))
+for (camp in levels(ezdata2$campus)) {
+  cur_data <- ezdata2 %>% filter(campus==camp)
+  title <- paste("Distribution of End Time of",  toupper(camp))
+  hist(cur_data$start_hr, main=title, xlab="end hour", breaks=9, border="white", col="pink")
+}
+dev.off()
+
+### duration vs campus
 #One-way ANOVA on duration and campus
 myap<-aov(duration~campus,data=ezdata2)
 summary(myap)
 lmod<-lm(duration~campus,ezdata2)
 summary(lmod)
-
 #Duration plots by Campus
-pomona<-ezdata2 %>% filter(campus=="pomona" | campus=="pom")
+pomona<-ezdata2 %>% filter(campus=="pom")
 pomona %>% ggplot(aes(x=1:dim(pomona)[1],y=duration))+geom_hline(aes(yintercept=mean(pomona$duration)),color="blue")+geom_point(size=0.5)+labs(x="index", title="Wireless Duration Plot of Pomona College")
 
 hmc<-ezdata2%>%filter(campus=="hmc")
 hmc %>% ggplot(aes(x=1:dim(hmc)[1],y=duration))+geom_hline(aes(yintercept=mean(hmc$duration)),color="brown")+geom_point(size=0.5)+labs(x="index", title="Wireless Duration Plot of Harvey Mudd College")
 
-pitzer<-ezdata2%>%filter(campus=="pitzer"|campus=="pit")
+pitzer<-ezdata2%>%filter(campus=="pit")
 pitzer %>% ggplot(aes(x=1:dim(pitzer)[1],y=duration))+geom_hline(aes(yintercept=mean(pitzer$duration)),color="orange")+geom_point(size=0.5)+labs(x="index", title="Wireless Duration Plot of Pitzer College")
 
-scripps<-ezdata2%>%filter(campus=="scrippscollege"|campus=="scr")
+scripps<-ezdata2%>%filter(campus=="scr")
 scripps %>% ggplot(aes(x=1:dim(scripps)[1],y=duration))+geom_hline(aes(yintercept=mean(scripps$duration)),color="green")+geom_point(size=0.5)+labs(x="index", title="Wireless Duration Plot of Scripps College")
 
 cmc<-ezdata2%>%filter(campus=="cmc")
@@ -82,18 +129,13 @@ kgi %>% ggplot(aes(x=1:dim(kgi)[1],y=duration))+geom_hline(aes(yintercept=mean(k
 #Duration Histogram                   
 ezdata2 %>% ggplot(aes(x=duration))+geom_histogram(binwidth=30,color="pink")+coord_cartesian(xlim=c(0,600))                   
                    
-# Change campus
 
-ezdata2$campus[ezdata2$campus == "scrippscollege"] <- "scr"
-ezdata2$campus[ezdata2$campus == "pomona"] <- "pom"
-ezdata2$campus[ezdata2$campus == "pitzer"] <- "pit"
-ezdata2$campus[ezdata2$campus == "kecksci"] <- "kec"
 
-# School vs. Domain
-
-par(mfrow=c(3, 2))
+### School vs. Domain
+pdf("school-vs-domain.pdf",width=8,height=15)
+par(mfrow=c(4, 2))
 FREQ_LIMIT <- 500
-for (campus in c("hmc", "pom", "scr", "pit", "cmc", "cgu")) {
+for (campus in levels(ezdata2$campus)) {
   campus_data <- ezdata2[ezdata2$campus == campus,]
   domain_count <- as.data.frame(table(unlist(campus_data$domain)))
   
@@ -102,23 +144,6 @@ for (campus in c("hmc", "pom", "scr", "pit", "cmc", "cgu")) {
   levels(domain_data$Var1) <- c(levels(domain_data$Var1), "other")
   domain_data <- rbind(domain_data, small_domain_count)
   
-  pie(domain_data$Freq, sapply(domain_data$Var1, as.character), main=paste(campus, "vs. Domain", sep=" "))
+  pie(domain_data$Freq, sapply(domain_data$Var1, as.character), radius = 1, main=paste(campus, "vs. Domain", sep=" "))
 }
-                   
-                   
-## partition start hr into bins
-getHr <- function(datetime) {
-  hms <- strsplit(trimws(datetime), ' ')[[1]][2]
-  as.numeric(strsplit(hms, ':')[[1]][1])
-}
-
-ezdata2 <- ezdata2 %>% mutate(start_hr=sapply(ezdata2$start, getHr),
-                              end_hr=sapply(ezdata2$end, getHr))
-
-library(ggplot2)
-# plots for all school
-ggplot(ezdata2, aes(x=start_hr, fill=campus)) + geom_bar() + labs(title="Distribution of Start Time (All)") + xlab("start hour")
-ggplot(ezdata2, aes(x=end_hr, fill=campus)) + geom_bar() + labs(title="Distribution of End Time (All)") + xlab("end hour")
-# by individual schools
-ggplot(ezdata2 %>% filter(campus=="hmc"), aes(x=start_hr)) + geom_histogram(breaks=c(seq(0, 24, 3)), color="white", fill="blue") + ggtitle("Distribution of Start Time (HMC)") + xlab("start hour")
-
+dev.off()
