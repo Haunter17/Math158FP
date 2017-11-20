@@ -1,5 +1,6 @@
 ## task 1
 library(readr)
+require(plyr)
 require(dplyr)
 library(ggplot2)
 library(gridExtra)
@@ -128,8 +129,49 @@ kgi %>% ggplot(aes(x=1:dim(kgi)[1],y=duration))+geom_hline(aes(yintercept=mean(k
 
 #Duration Histogram                   
 ezdata2 %>% ggplot(aes(x=duration))+geom_histogram(binwidth=30,color="pink")+coord_cartesian(xlim=c(0,600))                   
-                   
 
+
+### Duration vs.Domain
+par(mfrow=c(1,1))
+# ebscohost_domain_data <- ezdata2[ezdata2$domain == "ebscohost" | ezdata2$domain == "ebrary",]
+ebscohost_domain_data <- ezdata2[(ezdata2$domain %in% c("ebscohost", "ebrary", "jstor", "oclc", "proquest")) & (ezdata2$duration < 20000),]
+
+ebscohost_domain_data$domain <- factor(ebscohost_domain_data$domain)
+boxplot(duration~domain, data = ebscohost_domain_data, main = "ebscohost vs. ebrary")
+
+domain_aov<-aov(duration~domain,data=ebscohost_domain_data)
+summary(domain_aov)
+lmod<-lm(duration~domain, ebscohost_domain_data)
+summary(lmod)
+
+
+### Domain Duration vs. Domain Count
+domain_duration_count <- as.data.frame(table(unlist(ezdata2$domain)))
+domain_duration_count_top <- head(arrange(domain_duration_count, desc(Freq)), n = 30)
+domain_duration_means <- sapply(domain_duration_count_top$Var1, function(domain) {
+  domain_data <- ezdata2[ezdata2$domain == domain,] %>% filter(!is.na(duration))
+  mean(domain_data$duration)
+})
+
+domain_duration_df <- data.frame(mean=domain_duration_means, count=domain_duration_count_top$Freq)
+domain_duration_df <- domain_duration_df[domain_duration_df$mean < 15000,]
+summary(domain_duration_df)
+
+pdf("domain-count-boxcox.pdf",width=8,height=6)
+mdl_old <- lm(count~mean, data = domain_duration_df)
+require(MASS)
+par(mfrow=c(1,2))
+boxcox(mdl_old, plotit=T)
+boxcox(mdl_old, plotit=T, lambda=seq(-1,1,by=0.1))
+dev.off()
+
+pdf("domain-count-fit.pdf",width=8,height=6)
+par(mfrow=c(1,1))
+mdl <- lm(count^(-1/2)~mean, data = domain_duration_df)
+summary(mdl)
+plot(count^(-1/2)~mean, data = domain_duration_df, main="Domain Visit Count vs. Mean of Duration", xlab = "Duration", ylab = "Count")
+abline(mdl)
+dev.off()
 
 ### School vs. Domain
 pdf("school-vs-domain.pdf",width=8,height=15)
