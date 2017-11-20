@@ -95,7 +95,7 @@ par(mfrow=c(4, 2))
 for (camp in levels(ezdata2$campus)) {
   cur_data <- ezdata2 %>% filter(campus==camp)
   title <- paste("Distribution of End Time of",  toupper(camp))
-  hist(cur_data$start_hr, main=title, xlab="end hour", breaks=9, border="white", col="pink")
+  hist(cur_data$end_hr, main=title, xlab="end hour", breaks=9, border="white", col="pink")
 }
 dev.off()
 
