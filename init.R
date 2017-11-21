@@ -48,7 +48,7 @@ ezdata$start_ts <- as.numeric(as.POSIXct(anytime(ezdata$start), tz = "ETC/GMT-7"
 ezdata$end_ts <- as.numeric(as.POSIXct(anytime(ezdata$end), tz = "ETC/GMT-7"))
 
 #select variables
-ezdata2<-ezdata %>% select(campus,domain,subdomain,path,query,start,end,start_ts,end_ts)
+ezdata2<-ezdata %>% dplyr::select(campus,domain,subdomain,path,query,start,end,start_ts,end_ts)
 
 #deleting rows with NA
 ezdata2<-ezdata2 %>% filter(!is.na(end_ts))
@@ -189,3 +189,14 @@ for (campus in levels(ezdata2$campus)) {
   pie(domain_data$Freq, sapply(domain_data$Var1, as.character), radius = 1, main=paste(campus, "vs. Domain", sep=" "))
 }
 dev.off()
+
+### Duration vs Domain
+dur_by_domain <- aggregate(duration~domain, ezdata2, sum)
+names(dur_by_domain)[2] <- 'duration'
+domain_accesses <- aggregate(duration~domain, ezdata2, length)
+names(domain_accesses)[2] <- 'num accesses'
+domain_durations <- merge(dur_by_domain, domain_accesses, by="domain")
+freq_used_domains <- domain_durations[match(domain_data$Var1, domain_durations$domain), ]
+
+title <- paste("Domain total accesses")
+hist(domain_durations$duration, xlab="domain", main=title, border="white", col="pink")
